@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Approval ERP V6 Dynamic</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<div class="main-layout">
+<div class="sidebar">
+	<h2>📦 Approval ERP<br><small style="font-size:11px;color:#94a3b8">V6 Dynamic</small></h2>
+	<div class="user-badge">
+	<div>👤 <b id="badgeName">-</b> (<span id="badgeRole">-</span>)</div>
+		<div>📍 <span id="badgeLoc">-</span></div>
+	
+	</div>
+	<button onclick="showTab('inventory')" id="nav_inventory">📊 DATA Inventory</button>
+	<button onclick="showTab('request')" id="nav_request">📝 User Request</button>
+	<button onclick="showTab('approval')" id="nav_approval">✅ Approval Group</button>
+	<button onclick="showTab('dispatch')" id="nav_dispatch">📤 Dispatch</button>
+	<button onclick="showTab('entry')" id="nav_entry">📥 Entry Courier</button>
+	<button onclick="showTab('send')" id="nav_send">📦 Send Courier</button>
+	<button onclick="showTab('report')" id="nav_report">📑 All Records</button>
+	<button onclick="showTab('stock')" id="nav_stock">📈 Stock Report</button>
+	<button onclick="showTab('tada')" id="nav_tada">🚗 TA-DA Report</button>
+	<button onclick="showTab('users')" id="btnUsers">👥 User Management</button>
+	<button style="background:#dc2626;margin:20px 15px 0 15px" onclick="doLogout()">🚪 Logout</button>
+</div>
+
+<div class="main">
+<div style="display:flex;justify-content:space-between;margin-bottom:15px"><h2 id="welcomeText">Welcome</h2></div>
+<div id="users" class="tab"><div class="card"><h3>👥 User Management - Page Permission & Report View</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+<div><label>User ID *</label><input id="uId" placeholder="User ID"></div>
+<div><label>Password *</label><input id="uPass"></div>
+<div><label>Role</label>
+<select id="uRole">
+<option value="user">User</option>
+<option value="admin">Admin</option>
+</select>
+</div>
+<div>	<label>Location</label>
+<input id="uLoc" placeholder="Location"></div></div><div style="margin-top:15px"><label>📄 Page Permission</label>
+<div class="perm-grid"><label class="perm-check"><input type="checkbox" id="pg_inventory" checked> 📊 DATA Inventory</label>
+<label class="perm-check"><input type="checkbox" id="pg_request" checked> 📝 User Request</label>
+<label class="perm-check"><input type="checkbox" id="pg_approval" checked> ✅ Approval Group</label>
+<label class="perm-check"><input type="checkbox" id="pg_dispatch" checked> 📤 Dispatch</label>
+<label class="perm-check"><input type="checkbox" id="pg_entry" checked> 📥 Entry Courier</label>
+<label class="perm-check"><input type="checkbox" id="pg_send" checked> 📦 Send Courier</label>
+<label class="perm-check"><input type="checkbox" id="pg_report" checked> 📑 All Records</label>
+<label class="perm-check"><input type="checkbox" id="pg_stock" checked> 📈 Stock Report</label>
+<label class="perm-check"><input type="checkbox" id="pg_tada" checked> 🚗 TA-DA Report</label>
+</div>
+</div>
+<div style="margin-top:15px"><label>📑 Report View Permission</label>
+<div class="perm-grid">
+<label class="perm-check"><input type="checkbox" id="rp_view" checked> Report View</label>
+<label class="perm-check"><input type="checkbox" id="rp_export" checked> Export</label>
+<label class="perm-check"><input type="checkbox" id="rp_edit"> Edit</label>
+</div>
+</div>
+<button class="btn-green" style="margin-top:15px" onclick="addUser()">+ Add / Update User</button>
+<hr><table id="usersTable"></table></div></div><div id="inventory" class="tab">
+<div class="card"><h3>📊 DATA Inventory</h3>
+<div class="filter"><input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
+<button style="background:#3b82f6" onclick="document.getElementById('excelFile').click()">📥 Import Excel</button>
+</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;"><div>
+<label>Material Name *</label><input id="invMat"></div><div><label>Part No *</label>
+<input id="invPart"></div><div><label>Category</label><select id="invCat"><option>LNB</option>
+<option>SIM</option>
+<option>Cable</option>
+<option>Modem</option>
+<option>Router</option>
+<option>Other</option>
+</select></div>
+<div>
+<label>Manufacturer</label>
+<input id="invManu">
+</div><div><label>Upload Image</label>
+<input type="file" id="invImgFile" accept="image/*" onchange="previewImg(event)"></div>
+<div><label>Preview</label><div class="imgBox"><img id="invImgPreview" src="" width="80"></div></div>
+</div><button class="btn-green" style="margin-top:15px" onclick="addInventory()">+ Add</button><hr><table id="invTable"></table>
+</div></div>
+<div id="request" class="tab"><div class="card"><h3>📝 User Request</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;"><div class="searchBox"><label>🔍 Search Material</label>
+<input id="searchMatInput" placeholder="Search..." onkeyup="searchInventory()"><div id="searchSuggest" class="suggest" style="display:none"></div></div><div>
+<label>Selected Material</label>
+<input id="reqMat" readonly></div><div><label>Part No</label>
+<input id="reqPart" readonly></div><div><label>Category</label><input id="reqCat" readonly></div>
+<div><label>Quantity</label><input type="number" id="reqQty"></div>
+<div><label>Image</label>
+<div class="imgBox"><img id="reqImg" src="" width="80"></div>
+</div></div><button class="btn-green" style="margin-top:15px" onclick="sendRequest()">Send for Approval</button>
+<hr><table id="requestTable"></table></div></div><div id="approval" class="tab"><div class="card"><h3>✅ Approval Group</h3>
+<table id="approvalTable"></table></div></div>
+<div id="dispatch" class="tab"><div class="card"><h3>📤 Dispatch</h3><table id="dispatchTable"></table></div></div>
+<div id="entry" class="tab"><div class="card"><h3>📥 Entry Courier</h3><table id="entryTable"></table></div></div>
+<div id="send" class="tab"><div class="card"><h3>📦 Send Courier</h3><table id="sendTable"></table></div></div>
+<div id="report" class="tab active">
+<div class="card"><h3>📑 All Records</h3>
+<div class="filter">
+<input id="searchUser" placeholder="Search User" onkeyup="filterReport()"><input id="searchMat" placeholder="Search Material / Serial" onkeyup="filterReport()"><select id="searchStatus" onchange="filterReport()"><option value="">All Status</option><option>Available</option><option>Used</option><option>Replace</option><option>Return</option><option>Dispatched</option></select><button style="background:#22c55e" id="expExcel" onclick="exportExcel()">Export Excel</button>
+<button style="background:#dc2626" id="expPDF" onclick="exportPDF()">Export PDF</button>
+</div>
+<div style="overflow-x:auto"><table id="reportTable" style="min-width:1600px"></table></div>
+</div>
+</div>
+<div id="stock" class="tab">
+<div class="card"><h3>📈 Stock Report</h3>
+<div class="filter"><input id="stockUser" placeholder="Search User" onkeyup="renderStock()">
+<select id="stockCond" onchange="renderStock()">
+<option value="">All</option>
+<option>Good</option>
+<option>Faulty</option>
+</select>
+</div><h4 style="color:#22c55e">1. Available Stock</h4>
+<table id="availableTable"></table>
+<hr><h4 style="color:#dc2626">2. Faulty Stock</h4><table id="faultyTable"></table>
+</div>
+</div>
+<div id="tada" class="tab">
+<div class="card"><h3>🚗 TA-DA Entry</h3>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
+<div>
+<label>Date</label><input type="date" id="tDate">
+</div>
+<div><label>Side Code</label><input id="tSide"></div>
+<div><label>Incident ID</label><input id="tIncident"></div>
+<div><label>From</label><input id="tFrom"></div>
+<div><label>To</label><input id="tTo"></div>
+<div><label>Address</label><input id="tAddr"></div>
+<div><label>Distance KM</label><input type="number" id="tDist" oninput="calcAmount()"></div>
+<div><label>Amount Rs</label><input id="tAmt" readonly></div>
+<div><label>Work</label>
+<select id="tWork"><option>Maintenance Call</option><option>Installation Call</option>
+<option>Migration Call</option>
+</select>
+</div>
+</div>
+<button class="btn-green" style="margin-top:15px" onclick="addTada()">+ Add TA-DA</button>
+<hr>
+<div class="filter"><input id="tSearch" placeholder="Search" onkeyup="renderTada()">
+<select id="tFilter" onchange="renderTada()">
+<option value="">All Work</option>
+<option>Maintenance Call</option>
+<option>Installation Call</option>
+<option>Migration Call</option>
+</select>
+<button style="background:#22c55e" onclick="exportTadaExcel()">Export Excel</button>
+<button style="background:#dc2626" onclick="exportTadaPDF()">Export PDF</button>
+</div>
+<table id="tadaTable"></table>
+<div class="total" id="tTotal"></div>
+</div>
+</div>
+</div>
+</div>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+<script>currentUser=JSON.parse(localStorage.getItem("currentUser")||"null");if(!currentUser)location.href="index.html";else{checkLogin();loadData();renderAll();showTab('report');}
+</script>
+</body>
+</html>
